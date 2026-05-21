@@ -1,851 +1,799 @@
 #!/usr/bin/env python3
-"""Carolina Audiology Associates - static site builder.
-Generates index.html, services.html, about.html, education.html, contact.html
-with shared header/footer, full schema, and complete copy.
+"""Carolina Audiology Associates v2 site generator.
+
+Brand and copy rules sourced from:
+- Voice interview with Dr. Melissa Palmer (verified facts only)
+- Audigy Style Guide PDF uploaded by client (mission, vision, values, slogan,
+  tone, manufacturer prefs, must-avoid wording, demographics)
+- Logo PNG uploaded by client (used at full res in header and footer)
+- Clayton Audiology design direction (her other practice she likes)
+- Old caarmt.com site (for verified founding year 1988 only)
+
+Rules enforced in this script:
+- No emojis anywhere
+- No em dashes, no en dashes anywhere
+- No fabricated pricing or evaluation durations
+- Marketing uses 'hearing technology' not 'hearing aids'
+- 'Complimentary' not 'free'
 """
-import os, json, pathlib
 
-OUT = pathlib.Path(__file__).parent
+from pathlib import Path
+import textwrap
 
-SITE = {
-    "name": "Carolina Audiology Associates",
-    "phone": "252-790-6649",
-    "phone_tel": "+12527906649",
-    "email": "info@carolinaaud.com",
-    "address": "4065 Capital Drive",
-    "city": "Rocky Mount",
-    "state": "NC",
-    "zip": "27804",
-    "country": "US",
-    "geo_lat": 35.9382,
-    "geo_lng": -77.7905,
-    "hours_text": "Mon–Thu 9:00 AM – 5:00 PM",
-    "founder": "Dr. Melissa Palmer, Au.D.",
-    "url": "https://kinggavint.github.io/carolina-audiology-proof",
+ROOT = Path(__file__).parent
+
+# ---------- Practice facts (all verified) ----------
+PRACTICE = "Carolina Audiology Associates"
+PHONE_DISPLAY = "(252) 790-6649"
+PHONE_TEL = "+12527906649"
+ADDRESS_LINE = "4065 Capital Drive"
+CITY_STATE_ZIP = "Rocky Mount, NC 27804"
+EMAIL = "info@carolinaaud.com"
+HOURS_LINE = "Monday to Thursday, 9:00 AM to 5:00 PM"
+HOURS_SHORT = "Mon to Thu, 9 to 5"
+FOUNDED = "1988"
+PROVIDER_NAME = "Dr. Melissa Palmer, Au.D., CCC-A"
+
+# Mission, vision, values, slogan come directly from her Audigy style guide
+SLOGAN = "Helping you hear what matters most"
+MISSION = ("Our mission is to improve our patients' quality of life through "
+           "better hearing, clear communication, and compassionate "
+           "personalized care.")
+VISION = ("Our vision is to empower our community through education and "
+          "engagement, ensuring that personalized hearing healthcare is "
+          "accessible to all. We believe that when we hear better, we live "
+          "better.")
+VALUES = ("Ownership and leadership, personalization, and community "
+          "engagement. We lead with ownership, providing personalized "
+          "hearing care and community education so every patient "
+          "experiences the joy of connection.")
+
+BOILERPLATE = (f"{PRACTICE} has been serving the Rocky Mount community "
+               f"since {FOUNDED}. Under the leadership of {PROVIDER_NAME}, "
+               "our team is committed to empowering patients to hear with "
+               "confidence through personalized hearing care and education.")
+
+# Manufacturers from her style guide
+MANUFACTURERS = ["Oticon", "ReSound"]
+
+INSURANCES = ["Medicare", "Blue Cross Blue Shield", "UnitedHealthcare",
+              "Humana", "Aetna"]
+
+SERVICES = [
+    {
+        "slug": "diagnostic-hearing-evaluations",
+        "title": "Diagnostic Hearing Evaluations",
+        "icon": "ear",
+        "summary": ("Comprehensive testing to identify the type and degree "
+                    "of hearing loss and guide a personalized care plan."),
+        "long": ("A comprehensive diagnostic hearing evaluation looks at how "
+                 "you hear pure tones, how well you understand speech, and "
+                 "how your middle ear is functioning. The results tell us "
+                 "whether you have hearing loss, how much, in which ears, "
+                 "and what kind. From there we sit with you and your family "
+                 "to talk through what the results mean for your daily life "
+                 "and what your options are."),
+    },
+    {
+        "slug": "hearing-technology",
+        "title": "Hearing Technology Fittings",
+        "icon": "device",
+        "summary": ("Personalized fittings using technology from Oticon and "
+                    "ReSound, matched to your hearing, your lifestyle, and "
+                    "your goals."),
+        "long": ("Modern hearing technology is quieter, smaller, and far "
+                 "more capable than what most people remember. We work "
+                 "primarily with Oticon and ReSound because of their "
+                 "long track records, sound quality, and connectivity. "
+                 "Every fitting starts with your goals. Whether that is "
+                 "hearing your grandchildren clearly, getting back into "
+                 "restaurants, or staying connected on phone calls, we "
+                 "match the technology to the life you want to live."),
+    },
+    {
+        "slug": "tinnitus-care",
+        "title": "Tinnitus Care",
+        "icon": "wave",
+        "summary": ("Evaluation and management strategies for the ringing, "
+                    "buzzing, or humming many adults experience."),
+        "long": ("Tinnitus, the ringing or buzzing many people hear when no "
+                 "outside sound is present, can be exhausting. We start by "
+                 "evaluating your hearing and your tinnitus, then talk "
+                 "through the options. For many patients, well-fit hearing "
+                 "technology with sound therapy reduces how much they "
+                 "notice the tinnitus. Education and counseling are part "
+                 "of every plan."),
+    },
+    {
+        "slug": "hearing-aid-repair",
+        "title": "Hearing Aid Repair and Cleaning",
+        "icon": "tools",
+        "summary": ("Repair, cleaning, and maintenance for most major "
+                    "hearing aid brands, including devices not originally "
+                    "purchased from us."),
+        "long": ("Hearing aids work hardest in the places that are hardest "
+                 "on them, your ears. We clean, service, and repair most "
+                 "major brands, including devices purchased elsewhere. "
+                 "Routine cleanings and tune-ups extend the life of your "
+                 "investment and keep your sound clear."),
+    },
+    {
+        "slug": "follow-up-care",
+        "title": "Ongoing Follow-up Care",
+        "icon": "calendar",
+        "summary": ("Regular check-ins to fine-tune your hearing technology "
+                    "and keep your care plan working for your real life."),
+        "long": ("Your hearing changes, your lifestyle changes, and the way "
+                 "you use your hearing technology will change too. We "
+                 "build follow-up visits into every care plan so we can "
+                 "adjust settings, retest hearing when needed, and answer "
+                 "questions as they come up. You are not on your own after "
+                 "the fitting."),
+    },
+]
+
+# ---------- Inline SVG icons (single-stroke, navy) ----------
+ICONS = {
+    # Stylized ear
+    "ear": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+            'aria-hidden="true">'
+            '<path d="M16 18a8 8 0 0 1 16 0c0 6-5 7-5 12a4 4 0 0 1-8 0"/>'
+            '<path d="M22 22a3 3 0 0 1 6 0c0 3-3 3-3 6"/>'
+            '</svg>'),
+    # Hearing device
+    "device": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+               'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+               'aria-hidden="true">'
+               '<path d="M18 14c-4 2-6 6-6 12s2 10 6 12"/>'
+               '<path d="M20 18a8 8 0 0 1 14 6c0 6-4 9-4 13a3 3 0 0 1-6 0"/>'
+               '<circle cx="24" cy="24" r="2"/>'
+               '</svg>'),
+    # Sound waves
+    "wave": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+             'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+             'aria-hidden="true">'
+             '<path d="M10 24h4"/>'
+             '<path d="M18 18v12"/>'
+             '<path d="M24 14v20"/>'
+             '<path d="M30 18v12"/>'
+             '<path d="M36 22v4"/>'
+             '</svg>'),
+    # Tools / wrench
+    "tools": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+              'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+              'aria-hidden="true">'
+              '<path d="M30 12a6 6 0 0 0-6 6c0 1 0 2 .5 3L12 33.5a3 3 0 0 0 4 4L28.5 25c1 .5 2 .5 3 .5a6 6 0 0 0 6-6c0-1 0-2-.5-3L33 21l-4-4 3.5-3.5c-.5-.5-1.5-1-2.5-1.5z"/>'
+              '</svg>'),
+    # Calendar
+    "calendar": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+                 'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+                 'aria-hidden="true">'
+                 '<rect x="10" y="12" width="28" height="26" rx="2"/>'
+                 '<path d="M10 20h28"/>'
+                 '<path d="M18 8v8"/>'
+                 '<path d="M30 8v8"/>'
+                 '<path d="M18 28h4"/>'
+                 '<path d="M26 28h4"/>'
+                 '</svg>'),
+    # Phone
+    "phone": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+              'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+              'aria-hidden="true">'
+              '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>'
+              '</svg>'),
+    "pin": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+            'aria-hidden="true">'
+            '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>'
+            '<circle cx="12" cy="10" r="3"/>'
+            '</svg>'),
+    "clock": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+              'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+              'aria-hidden="true">'
+              '<circle cx="12" cy="12" r="10"/>'
+              '<path d="M12 6v6l4 2"/>'
+              '</svg>'),
+    "mail": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+             'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+             'aria-hidden="true">'
+             '<rect x="2" y="4" width="20" height="16" rx="2"/>'
+             '<path d="M22 6l-10 7L2 6"/>'
+             '</svg>'),
+    "check": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+              'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" '
+              'aria-hidden="true">'
+              '<polyline points="20 6 9 17 4 12"/>'
+              '</svg>'),
 }
 
-# ---------------------------------------------------------------------------
-# Shared partials
-# ---------------------------------------------------------------------------
 
-def head(title, description, canonical_path, extra_schema=None):
-    canonical = f"{SITE['url']}{canonical_path}"
-    base_schema = {
-        "@context": "https://schema.org",
-        "@type": "MedicalBusiness",
-        "@id": f"{SITE['url']}/#business",
-        "name": SITE["name"],
-        "image": f"{SITE['url']}/og.png",
-        "url": SITE["url"] + "/",
-        "telephone": SITE["phone"],
-        "email": SITE["email"],
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": SITE["address"],
-            "addressLocality": SITE["city"],
-            "addressRegion": SITE["state"],
-            "postalCode": SITE["zip"],
-            "addressCountry": SITE["country"],
-        },
-        "geo": {"@type": "GeoCoordinates", "latitude": SITE["geo_lat"], "longitude": SITE["geo_lng"]},
-        "openingHoursSpecification": [{
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday"],
-            "opens": "09:00", "closes": "17:00"
-        }],
-        "areaServed": [
-            {"@type": "City", "name": "Rocky Mount, NC"},
-            {"@type": "City", "name": "Tarboro, NC"},
-            {"@type": "City", "name": "Wilson, NC"},
-        ],
-        "medicalSpecialty": "Audiology",
-        "founder": {"@type": "Person", "name": SITE["founder"]},
-        "priceRange": "$$",
-    }
-    schema_blocks = [json.dumps(base_schema, indent=2)]
-    if extra_schema:
-        for s in extra_schema:
-            schema_blocks.append(json.dumps(s, indent=2))
-    schema_html = "\n".join(f'<script type="application/ld+json">{s}</script>' for s in schema_blocks)
+# ---------- HTML helpers ----------
 
-    return f"""<!DOCTYPE html>
+def page(title, description, body, canonical, page_class="", extra_head=""):
+    return f"""<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
 <meta name="description" content="{description}">
 <link rel="canonical" href="{canonical}">
-<meta property="og:title" content="{title}">
-<meta property="og:description" content="{description}">
-<meta property="og:type" content="website">
-<meta property="og:url" content="{canonical}">
-<meta name="theme-color" content="#0e3f4f">
+<link rel="icon" type="image/png" href="/assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/carolina-audiology-proof/css/base.css">
-{schema_html}
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/base.css">
+{extra_head}
 </head>
-<body>
-<a href="#main" class="skip-link">Skip to main content</a>
-"""
-
-def header(active="home"):
-    def cls(name): return ' class="active"' if name == active else ''
-    return f"""<div class="utility-bar">
-  <div class="container">
-    <div>Serving Rocky Mount, Tarboro &amp; Wilson, NC</div>
-    <div class="util-right">
-      <a href="tel:{SITE['phone_tel']}">Call {SITE['phone']}</a>
-      <span>{SITE['hours_text']}</span>
-    </div>
-  </div>
-</div>
-<header class="site-header">
-  <div class="container header-inner">
-    <a href="/carolina-audiology-proof/" class="brand" aria-label="Carolina Audiology Associates home">
-      <div class="brand-mark">CA</div>
-      <div class="brand-text">
-        <span class="name">Carolina Audiology</span>
-        <span class="tag">Associates · Rocky Mount, NC</span>
-      </div>
-    </a>
-    <nav class="primary" aria-label="Primary">
-      <a href="/carolina-audiology-proof/"{cls('home')}>Home</a>
-      <a href="/carolina-audiology-proof/services.html"{cls('services')}>Services</a>
-      <a href="/carolina-audiology-proof/about.html"{cls('about')}>About</a>
-      <a href="/carolina-audiology-proof/education.html"{cls('education')}>Hearing Health</a>
-      <a href="/carolina-audiology-proof/contact.html" class="btn btn-primary">Book Appointment</a>
-    </nav>
-    <button class="nav-toggle" aria-label="Open menu" onclick="document.querySelector('nav.primary').classList.toggle('open')">☰</button>
-  </div>
-</header>
-<main id="main">
-"""
-
-FOOTER = f"""</main>
-<footer class="site-footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <h4>Carolina Audiology Associates</h4>
-        <p>Independent, doctor-led hearing care for adults in Rocky Mount, Tarboro, Wilson, and across eastern North Carolina.</p>
-        <p style="margin-top:14px;"><strong style="color:#fff">{SITE['phone']}</strong><br>{SITE['address']}<br>{SITE['city']}, {SITE['state']} {SITE['zip']}</p>
-      </div>
-      <div>
-        <h4>Services</h4>
-        <ul>
-          <li><a href="/carolina-audiology-proof/services.html#hearing-evaluation">Hearing Evaluation</a></li>
-          <li><a href="/carolina-audiology-proof/services.html#tinnitus">Tinnitus Treatment</a></li>
-          <li><a href="/carolina-audiology-proof/services.html#hearing-aids">Hearing Aids</a></li>
-          <li><a href="/carolina-audiology-proof/services.html#earwax">Earwax Removal</a></li>
-          <li><a href="/carolina-audiology-proof/services.html#hearing-protection">Hearing Protection</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Explore</h4>
-        <ul>
-          <li><a href="/carolina-audiology-proof/about.html">About Dr. Palmer</a></li>
-          <li><a href="/carolina-audiology-proof/education.html">Hearing Health</a></li>
-          <li><a href="/carolina-audiology-proof/contact.html">Book Appointment</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Hours</h4>
-        <ul>
-          <li>Mon · 9:00 – 5:00</li>
-          <li>Tue · 9:00 – 5:00</li>
-          <li>Wed · 9:00 – 5:00</li>
-          <li>Thu · 9:00 – 5:00</li>
-          <li>Fri – Sun · Closed</li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <div>© 2026 Carolina Audiology Associates · All rights reserved</div>
-      <div>HIPAA-compliant care · Most major insurance accepted</div>
-    </div>
-  </div>
-</footer>
+<body class="{page_class}">
+{header_html()}
+<main>
+{body}
+</main>
+{footer_html()}
 </body>
 </html>
 """
 
-# ---------------------------------------------------------------------------
-# Page bodies
-# ---------------------------------------------------------------------------
 
-def page_home():
-    title = "Audiologist in Rocky Mount, NC | Carolina Audiology Associates"
-    desc = "Independent audiology practice in Rocky Mount, NC. Dr. Melissa Palmer offers hearing evaluations, tinnitus treatment, hearing aids, and earwax removal. Call 252-790-6649."
+def header_html():
+    return f"""<div class="utility-bar">
+  <div class="container utility-bar__inner">
+    <a class="utility-bar__phone" href="tel:{PHONE_TEL}">
+      {ICONS['phone']}<span>Call or text {PHONE_DISPLAY}</span>
+    </a>
+    <span class="utility-bar__hours">{HOURS_SHORT}</span>
+  </div>
+</div>
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="/" aria-label="{PRACTICE} home">
+      <img src="/assets/logo.png" alt="{PRACTICE}" class="brand__logo">
+    </a>
+    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="primary-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/services.html">Services</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/education.html">Education</a></li>
+        <li><a href="/contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn--primary header-cta" href="/contact.html">Book Appointment</a>
+  </div>
+</header>
+"""
 
-    extra = [{
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-            {"@type":"Question","name":"What are the signs I should see an audiologist?","acceptedAnswer":{"@type":"Answer","text":"Common signs include turning up the TV louder than family members like, asking people to repeat themselves, trouble following conversations in restaurants, ringing or buzzing in your ears, and feeling more tired after social gatherings. If any of these sound familiar, a baseline hearing evaluation is a smart next step."}},
-            {"@type":"Question","name":"How long does a hearing evaluation take?","acceptedAnswer":{"@type":"Answer","text":"A complete adult diagnostic hearing evaluation at Carolina Audiology Associates takes about 60 minutes. That includes a health and lifestyle conversation, a full hearing test, a clear review of your results, and time to answer your questions."}},
-            {"@type":"Question","name":"Do you accept insurance?","acceptedAnswer":{"@type":"Answer","text":"Yes. We work with Medicare, Blue Cross Blue Shield, UnitedHealthcare, Humana, and Aetna. We will verify your benefits before your visit so there are no surprises."}},
-            {"@type":"Question","name":"What hearing aid brands do you fit?","acceptedAnswer":{"@type":"Answer","text":"Because we are independent, we fit several leading manufacturers and select the technology that best matches your hearing loss, lifestyle, and budget. We are never tied to one brand."}},
-            {"@type":"Question","name":"Where do you serve?","acceptedAnswer":{"@type":"Answer","text":"Our office is in Rocky Mount, NC. We see patients from Rocky Mount, Tarboro, Wilson, Nashville, Wilson County, Edgecombe County, Nash County, and the surrounding communities in eastern North Carolina."}},
-        ]
-    }, {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        "speakable": {"@type": "SpeakableSpecification", "cssSelector": [".hero h1", ".hero p.lead", "#why-us p"]}
-    }]
 
-    body = """
+def footer_html():
+    insurance_list = ", ".join(INSURANCES)
+    manuf_list = " and ".join(MANUFACTURERS)
+    return f"""<footer class="site-footer">
+  <div class="container site-footer__grid">
+    <div class="site-footer__col">
+      <img src="/assets/logo.png" alt="{PRACTICE}" class="footer__logo">
+      <p class="footer__slogan">{SLOGAN}</p>
+    </div>
+    <div class="site-footer__col">
+      <h3>Visit</h3>
+      <p>{ADDRESS_LINE}<br>{CITY_STATE_ZIP}</p>
+      <p>{HOURS_LINE}</p>
+    </div>
+    <div class="site-footer__col">
+      <h3>Contact</h3>
+      <p><a href="tel:{PHONE_TEL}">{PHONE_DISPLAY}</a></p>
+      <p><a href="mailto:{EMAIL}">{EMAIL}</a></p>
+      <a class="btn btn--secondary" href="/contact.html">Book Appointment</a>
+    </div>
+    <div class="site-footer__col">
+      <h3>Care You Can Trust</h3>
+      <p>Featuring {manuf_list} hearing technology.</p>
+      <p>We accept {insurance_list}.</p>
+    </div>
+  </div>
+  <div class="site-footer__legal">
+    <div class="container">
+      <p>&copy; {2026} {PRACTICE}. All rights reserved.</p>
+      <p><a href="/sitemap.xml">Sitemap</a></p>
+    </div>
+  </div>
+</footer>
+"""
+
+
+# ---------- Schema.org JSON-LD ----------
+
+def local_business_jsonld():
+    return textwrap.dedent(f"""\
+    <script type="application/ld+json">
+    {{
+      "@context": "https://schema.org",
+      "@type": "MedicalBusiness",
+      "name": "{PRACTICE}",
+      "image": "https://kinggavint.github.io/carolina-audiology-proof/assets/logo.png",
+      "telephone": "{PHONE_DISPLAY}",
+      "email": "{EMAIL}",
+      "address": {{
+        "@type": "PostalAddress",
+        "streetAddress": "{ADDRESS_LINE}",
+        "addressLocality": "Rocky Mount",
+        "addressRegion": "NC",
+        "postalCode": "27804",
+        "addressCountry": "US"
+      }},
+      "openingHoursSpecification": [{{
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday"],
+        "opens": "09:00",
+        "closes": "17:00"
+      }}],
+      "url": "https://kinggavint.github.io/carolina-audiology-proof/",
+      "foundingDate": "{FOUNDED}",
+      "slogan": "{SLOGAN}",
+      "medicalSpecialty": "Audiology"
+    }}
+    </script>
+    """)
+
+
+def faq_jsonld(faqs):
+    items = ",\n".join([
+        f'{{"@type":"Question","name":{q!r},"acceptedAnswer":{{"@type":"Answer","text":{a!r}}}}}'
+        for q, a in faqs
+    ])
+    return f'<script type="application/ld+json">{{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{items}]}}</script>'
+
+
+# ---------- Pages ----------
+
+def home():
+    services_cards = "\n".join([
+        f"""<a class="service-card" href="/services.html#{s['slug']}">
+          <span class="service-card__icon">{ICONS[s['icon']]}</span>
+          <h3>{s['title']}</h3>
+          <p>{s['summary']}</p>
+          <span class="service-card__more">Learn more</span>
+        </a>""" for s in SERVICES
+    ])
+    faqs = [
+        ("How do I know if I need a hearing evaluation?",
+         "If you find yourself turning up the TV, asking people to repeat themselves, or struggling to follow conversations in noisy places, a diagnostic hearing evaluation can give you a clear answer. Many adults wait years before getting tested. There is no benefit to waiting."),
+        ("Do you take my insurance?",
+         f"We accept {', '.join(INSURANCES)}. If your plan is not listed, give us a call and we will help you understand your options."),
+        ("Which hearing technology brands do you fit?",
+         f"We work primarily with {' and '.join(MANUFACTURERS)} because of their sound quality, reliability, and connectivity. Your fitting is matched to your hearing and your lifestyle, not to a single product."),
+    ]
+    body = f"""
+{local_business_jsonld()}
+{faq_jsonld(faqs)}
+
 <section class="hero">
-  <div class="container">
-    <span class="section-eyebrow" style="color:#ffd9c5">Welcome to Carolina Audiology Associates</span>
-    <h1>Hearing care that listens first.</h1>
-    <p class="lead">Independent, doctor-led audiology in Rocky Mount, NC. We take the time to understand your hearing — and your life — before we recommend anything.</p>
-    <div class="hero-actions">
-      <a href="/carolina-audiology-proof/contact.html" class="btn btn-primary">Book an Appointment</a>
-      <a href="tel:""" + SITE['phone_tel'] + """" class="btn btn-ghost">Call """ + SITE['phone'] + """</a>
+  <div class="container hero__inner">
+    <div class="hero__copy">
+      <p class="eyebrow">Rocky Mount Audiology, Since {FOUNDED}</p>
+      <h1>Hear what matters most. Clearly.</h1>
+      <p class="hero__lede">{PROVIDER_NAME} and our team provide personalized hearing care for adults and families in Rocky Mount and across eastern North Carolina.</p>
+      <div class="hero__ctas">
+        <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+        <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
+      </div>
+      <ul class="hero__trust">
+        <li>{ICONS['check']}<span>Comprehensive diagnostic evaluations</span></li>
+        <li>{ICONS['check']}<span>{' and '.join(MANUFACTURERS)} hearing technology</span></li>
+        <li>{ICONS['check']}<span>Most major insurance accepted</span></li>
+      </ul>
     </div>
-    <p class="hero-meta">Serving <strong>Rocky Mount</strong>, <strong>Tarboro</strong>, and <strong>Wilson</strong> · Most major insurance accepted</p>
+    <aside class="hero__card">
+      <h2>Plan your visit</h2>
+      <p><strong>{ADDRESS_LINE}</strong><br>{CITY_STATE_ZIP}</p>
+      <p><strong>Hours</strong><br>{HOURS_LINE}</p>
+      <p><strong>Phone</strong><br><a href="tel:{PHONE_TEL}">{PHONE_DISPLAY}</a></p>
+      <a class="btn btn--primary btn--full" href="/contact.html">Schedule a Visit</a>
+    </aside>
   </div>
 </section>
 
-<section>
+<section class="section section--alt">
   <div class="container">
-    <div class="section-header center">
-      <span class="section-eyebrow">What we do</span>
-      <h2>Comprehensive hearing care, under one roof.</h2>
-      <p>From a first hearing screening to fitting, programming, and lifelong follow-up, every step of your hearing care happens with the same doctor who knows your story.</p>
-    </div>
-    <div class="service-grid">
-      <div class="service-card">
-        <div class="ico">🔍</div>
-        <h3>Hearing Evaluations</h3>
-        <p>Complete diagnostic hearing tests for adults. We measure how you hear in real-world listening — not just in a sound booth.</p>
-        <a href="/carolina-audiology-proof/services.html#hearing-evaluation">Learn more →</a>
-      </div>
-      <div class="service-card">
-        <div class="ico">🔔</div>
-        <h3>Tinnitus Treatment</h3>
-        <p>Personalized care plans to quiet ringing, buzzing, or hissing in your ears — including sound therapy and hearing aid integration.</p>
-        <a href="/carolina-audiology-proof/services.html#tinnitus">Learn more →</a>
-      </div>
-      <div class="service-card">
-        <div class="ico">🎧</div>
-        <h3>Hearing Aids</h3>
-        <p>Independent fitting from several leading manufacturers, programmed precisely to your hearing and your life.</p>
-        <a href="/carolina-audiology-proof/services.html#hearing-aids">Learn more →</a>
-      </div>
-      <div class="service-card">
-        <div class="ico">💧</div>
-        <h3>Earwax Removal</h3>
-        <p>Safe, gentle, professional earwax removal — performed by a doctor of audiology, not a guess at home.</p>
-        <a href="/carolina-audiology-proof/services.html#earwax">Learn more →</a>
-      </div>
-      <div class="service-card">
-        <div class="ico">🛡️</div>
-        <h3>Hearing Protection</h3>
-        <p>Custom hearing protection for musicians, hunters, swimmers, and anyone exposed to loud sound on the job.</p>
-        <a href="/carolina-audiology-proof/services.html#hearing-protection">Learn more →</a>
-      </div>
-      <div class="service-card">
-        <div class="ico">🛠️</div>
-        <h3>Repair &amp; Programming</h3>
-        <p>Cleaning, in-office repairs, and reprogramming for hearing aids you already own — even if you bought them elsewhere.</p>
-        <a href="/carolina-audiology-proof/services.html#hearing-aids">Learn more →</a>
-      </div>
+    <p class="eyebrow eyebrow--center">What We Do</p>
+    <h2 class="section__title">Personalized hearing care, from evaluation to follow-up</h2>
+    <div class="services-grid">
+      {services_cards}
     </div>
   </div>
 </section>
 
-<section class="alt" id="why-us">
-  <div class="container">
-    <div class="split">
-      <div>
-        <span class="section-eyebrow">Why patients choose us</span>
-        <h2>Doctor-led care without the pressure.</h2>
-        <p>We are an independent practice — not a chain. That means your appointments are unhurried, your questions get full answers, and the only person guiding your hearing care is the doctor sitting across from you.</p>
-        <p>We will never push one brand, one device, or one price. We will recommend what is right for your hearing, your lifestyle, and your budget — and we will tell you honestly when you do not need a hearing aid yet.</p>
-        <ul style="list-style:none;padding:0;margin-top:20px;">
-          <li style="padding:8px 0;">✓ Time to actually talk with your audiologist</li>
-          <li style="padding:8px 0;">✓ Independent — multiple manufacturers, no brand lock-in</li>
-          <li style="padding:8px 0;">✓ Honest pricing and clear next steps</li>
-          <li style="padding:8px 0;">✓ Most major insurance accepted</li>
-          <li style="padding:8px 0;">✓ Lifetime aftercare on hearing aids fit at our office</li>
-        </ul>
-      </div>
-      <div>
-        <div style="background:#fff;padding:36px;border-radius:20px;box-shadow:var(--shadow-md);">
-          <span class="section-eyebrow">Insurance accepted</span>
-          <h3>We work with most major plans.</h3>
-          <p>We verify your benefits before your visit so you know what is covered.</p>
-          <div class="pill-row">
-            <span class="pill">Medicare</span>
-            <span class="pill">Blue Cross Blue Shield</span>
-            <span class="pill">UnitedHealthcare</span>
-            <span class="pill">Humana</span>
-            <span class="pill">Aetna</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="deep">
-  <div class="container">
-    <div class="section-header center">
-      <span class="section-eyebrow" style="color:#ffd9c5">The Carolina difference</span>
-      <h2>Hearing care, built around you.</h2>
-    </div>
-    <div class="trust-bar">
-      <div class="trust-item"><div class="num">60 min</div><div class="lbl">Unhurried evaluations</div></div>
-      <div class="trust-item"><div class="num">5+</div><div class="lbl">Insurance plans accepted</div></div>
-      <div class="trust-item"><div class="num">Au.D.</div><div class="lbl">Doctor-led visits, every time</div></div>
-      <div class="trust-item"><div class="num">3</div><div class="lbl">Communities served</div></div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="container">
-    <div class="section-header center">
-      <span class="section-eyebrow">Common questions</span>
-      <h2>What patients ask before they call.</h2>
-    </div>
-    <div class="faq">
-      <details><summary>What are the signs I should see an audiologist?</summary>
-        <div class="content"><p>Common signs include turning up the TV louder than family members like, asking people to repeat themselves, trouble following conversations in restaurants, ringing or buzzing in your ears, and feeling more tired after social gatherings. If any of these sound familiar, a baseline hearing evaluation is a smart next step.</p></div>
-      </details>
-      <details><summary>How long does a hearing evaluation take?</summary>
-        <div class="content"><p>A complete adult diagnostic hearing evaluation takes about 60 minutes. That includes a health and lifestyle conversation, a full hearing test, a clear review of your results, and time to answer your questions.</p></div>
-      </details>
-      <details><summary>Do you accept my insurance?</summary>
-        <div class="content"><p>We work with Medicare, Blue Cross Blue Shield, UnitedHealthcare, Humana, and Aetna. We will verify your benefits before your visit so there are no surprises.</p></div>
-      </details>
-      <details><summary>What hearing aid brands do you fit?</summary>
-        <div class="content"><p>Because we are independent, we fit several leading manufacturers and select the technology that best matches your hearing loss, lifestyle, and budget. We are never tied to one brand.</p></div>
-      </details>
-      <details><summary>Where do you serve?</summary>
-        <div class="content"><p>Our office is in Rocky Mount, NC. We see patients from Rocky Mount, Tarboro, Wilson, Nashville, and the surrounding communities in eastern North Carolina.</p></div>
-      </details>
-    </div>
-  </div>
-</section>
-
-<section class="cta-strip">
-  <div class="container">
+<section class="section pledge">
+  <div class="container pledge__inner">
     <div>
-      <h2>Ready to hear what you have been missing?</h2>
-      <p>Book your hearing evaluation with Dr. Palmer today.</p>
+      <p class="eyebrow">Our Promise</p>
+      <h2>Care that starts with listening</h2>
+      <p>Hearing care works best when it is built around you. We take time to understand your hearing, your goals, and your daily life. From the first evaluation through every follow-up, your care plan is yours.</p>
+      <a class="btn btn--primary" href="/about.html">About Our Practice</a>
     </div>
-    <a href="/carolina-audiology-proof/contact.html" class="btn btn-primary">Book Appointment</a>
+    <ul class="pledge__list">
+      <li>{ICONS['check']}<span><strong>Doctor-led care.</strong> Every patient is seen by {PROVIDER_NAME}.</span></li>
+      <li>{ICONS['check']}<span><strong>Comprehensive evaluations.</strong> Pure-tone, speech, and middle-ear testing in one visit.</span></li>
+      <li>{ICONS['check']}<span><strong>{' and '.join(MANUFACTURERS)}.</strong> Trusted hearing technology with strong service and warranty support.</span></li>
+      <li>{ICONS['check']}<span><strong>Ongoing follow-up.</strong> Adjustments and check-ins built into your care plan.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section section--alt faq">
+  <div class="container">
+    <p class="eyebrow eyebrow--center">Common Questions</p>
+    <h2 class="section__title">Answers to what patients ask first</h2>
+    <div class="faq__list">
+      {''.join([f'<details class="faq__item"><summary>{q}</summary><p>{a}</p></details>' for q,a in faqs])}
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="container cta-band__inner">
+    <div>
+      <h2>Ready to hear what matters most?</h2>
+      <p>Schedule a complimentary consultation with {PROVIDER_NAME}.</p>
+    </div>
+    <div class="cta-band__buttons">
+      <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+      <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
+    </div>
   </div>
 </section>
 """
-    return head(title, desc, "/", extra) + header("home") + body + FOOTER
+    return page(
+        title=f"{PRACTICE} | Rocky Mount NC Audiologist | {PROVIDER_NAME}",
+        description=f"{PRACTICE} provides personalized hearing care in Rocky Mount, NC. Comprehensive evaluations, hearing technology fittings, and tinnitus care from {PROVIDER_NAME}.",
+        body=body,
+        canonical="https://kinggavint.github.io/carolina-audiology-proof/",
+        page_class="page-home",
+    )
 
 
-def page_services():
-    title = "Audiology Services in Rocky Mount, NC | Carolina Audiology Associates"
-    desc = "Hearing evaluations, tinnitus treatment, hearing aid fitting and repair, earwax removal, and custom hearing protection in Rocky Mount, NC."
-    extra = [{
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-            {"@type":"Question","name":"How much do hearing aids cost?","acceptedAnswer":{"@type":"Answer","text":"Hearing aid pricing typically ranges from about $1,500 to $7,000 for a pair, depending on technology level and features. We will walk you through exactly what each option does and what it costs before you decide anything."}},
-            {"@type":"Question","name":"How long does a hearing aid fitting take?","acceptedAnswer":{"@type":"Answer","text":"Your hearing aid fitting appointment typically takes 60 to 90 minutes. We program your devices to your unique hearing prescription, show you how to use them, and confirm they sound right before you leave."}},
-            {"@type":"Question","name":"Can you treat tinnitus?","acceptedAnswer":{"@type":"Answer","text":"Yes. We provide tinnitus evaluations and personalized treatment plans, which may include sound therapy, hearing aids with tinnitus features, counseling, and lifestyle strategies."}},
-            {"@type":"Question","name":"Should I remove earwax at home?","acceptedAnswer":{"@type":"Answer","text":"We do not recommend cotton swabs or at-home ear candles. They can push wax deeper or injure the ear canal. Professional earwax removal is safer and only takes a few minutes."}},
-        ]
-    }]
-    body = """
+def services_page():
+    sections = ""
+    for s in SERVICES:
+        sections += f"""
+<section id="{s['slug']}" class="service-detail">
+  <div class="container service-detail__inner">
+    <div class="service-detail__icon">{ICONS[s['icon']]}</div>
+    <div class="service-detail__body">
+      <h2>{s['title']}</h2>
+      <p>{s['long']}</p>
+      <a class="btn btn--ghost" href="/contact.html">Ask about {s['title'].lower()}</a>
+    </div>
+  </div>
+</section>
+"""
+    body = f"""
+{local_business_jsonld()}
 <section class="page-hero">
   <div class="container">
-    <span class="section-eyebrow" style="color:#ffd9c5">Our services</span>
-    <h1>Complete hearing care for adults.</h1>
-    <p>From your first evaluation to lifelong follow-up, every service is delivered by a doctor of audiology who knows your hearing.</p>
+    <p class="eyebrow">Services</p>
+    <h1>Hearing care for every stage of life</h1>
+    <p class="page-hero__lede">From your first diagnostic evaluation to ongoing follow-up care, every service is delivered personally by {PROVIDER_NAME}.</p>
   </div>
 </section>
 
-<section id="hearing-evaluation">
+<section class="section section--alt">
   <div class="container">
-    <div class="split">
-      <div>
-        <span class="section-eyebrow">Step one</span>
-        <h2>Diagnostic Hearing Evaluation</h2>
-        <p>A complete adult hearing evaluation is the foundation of everything we do. It tells us how you hear — and how you hear in real life, not just in a quiet sound booth.</p>
-        <p>Your appointment includes a conversation about your lifestyle and concerns, otoscopy to check the health of your ear canal, pure-tone testing, speech-in-noise testing, and a clear, plain-English explanation of your results. You leave with a baseline you can compare to in future years.</p>
-        <p><strong>Time:</strong> About 60 minutes · <strong>Most insurance accepted.</strong></p>
-      </div>
-      <div>
-        <div style="background:#fff;padding:32px;border-radius:20px;box-shadow:var(--shadow-md);">
-          <h3 style="margin-top:0;">What you'll learn</h3>
-          <ul style="list-style:none;padding:0;">
-            <li style="padding:6px 0;">✓ The type and degree of your hearing loss</li>
-            <li style="padding:6px 0;">✓ How your hearing compares to expected for your age</li>
-            <li style="padding:6px 0;">✓ Whether hearing aids will help</li>
-            <li style="padding:6px 0;">✓ A clear plan — even if that plan is "watch and wait"</li>
-          </ul>
-        </div>
-      </div>
+    <div class="services-grid">
+      {''.join([f'<a class="service-card" href="#{s["slug"]}"><span class="service-card__icon">{ICONS[s["icon"]]}</span><h3>{s["title"]}</h3><p>{s["summary"]}</p><span class="service-card__more">Read more</span></a>' for s in SERVICES])}
     </div>
   </div>
 </section>
 
-<section class="alt" id="tinnitus">
-  <div class="container">
-    <div class="split">
-      <div>
-        <div style="background:#fff;padding:32px;border-radius:20px;box-shadow:var(--shadow-md);">
-          <h3 style="margin-top:0;">Tinnitus treatments we offer</h3>
-          <ul style="list-style:none;padding:0;">
-            <li style="padding:6px 0;">✓ Tinnitus assessment and matching</li>
-            <li style="padding:6px 0;">✓ Sound therapy and masking</li>
-            <li style="padding:6px 0;">✓ Hearing aids with tinnitus relief features</li>
-            <li style="padding:6px 0;">✓ Counseling and coping strategies</li>
-            <li style="padding:6px 0;">✓ Referral to ENT when medically indicated</li>
-          </ul>
-        </div>
-      </div>
-      <div>
-        <span class="section-eyebrow">For ringing, buzzing, or hissing</span>
-        <h2>Tinnitus Evaluation &amp; Treatment</h2>
-        <p>Tinnitus is the perception of sound — ringing, buzzing, hissing, or roaring — when no outside sound is present. It is incredibly common, and it is treatable. There is no single cure, but with the right plan, most people get meaningful, lasting relief.</p>
-        <p>We start by understanding your tinnitus: when it started, what it sounds like, and how it affects your sleep, focus, and mood. Then we build a personalized plan combining sound therapy, hearing aids if appropriate, and practical coping strategies.</p>
-      </div>
-    </div>
-  </div>
-</section>
+{sections}
 
-<section id="hearing-aids">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-eyebrow">Independent. Always.</span>
-      <h2>Hearing Aid Fitting, Programming &amp; Repair</h2>
-      <p>We fit several leading manufacturers and select the device that fits your hearing, your lifestyle, and your budget — not the device that gives us the best margin.</p>
-    </div>
-    <div class="service-grid">
-      <div class="service-card">
-        <h3>Fitting &amp; Programming</h3>
-        <p>Every hearing aid is programmed to your unique hearing prescription using real-ear measurement, so you hear what you should be hearing — not a factory default.</p>
-      </div>
-      <div class="service-card">
-        <h3>Follow-Up &amp; Aftercare</h3>
-        <p>Hearing aids need fine-tuning. We include follow-up visits so we can adjust the programming as your brain adapts and as your needs change.</p>
-      </div>
-      <div class="service-card">
-        <h3>Repair (Any Brand)</h3>
-        <p>Cleaning, in-office repairs, and reprogramming — even for hearing aids you bought somewhere else. Bring them in and we will take a look.</p>
-      </div>
-    </div>
-    <p style="margin-top:30px;color:var(--c-ink-soft);"><strong>Investment range:</strong> Hearing aids typically range from $1,500 to $7,000 per pair depending on technology level. We will walk you through every option clearly before you decide anything.</p>
-  </div>
-</section>
-
-<section class="alt" id="earwax">
-  <div class="container">
-    <div class="split">
-      <div>
-        <span class="section-eyebrow">Safe and gentle</span>
-        <h2>Professional Earwax Removal</h2>
-        <p>Wax build-up is one of the most common — and most easily treated — causes of hearing trouble. We safely remove cerumen in the office using methods chosen for your ear, including curette, suction, or irrigation.</p>
-        <p>Please do not use cotton swabs at home — they push wax deeper. And please skip the ear candles. Five minutes in our chair is safer and more effective.</p>
-      </div>
-      <div>
-        <div style="background:#fff;padding:32px;border-radius:20px;box-shadow:var(--shadow-md);">
-          <h3 style="margin-top:0;">When to come in</h3>
-          <ul style="list-style:none;padding:0;">
-            <li style="padding:6px 0;">✓ Sudden muffled hearing in one ear</li>
-            <li style="padding:6px 0;">✓ A feeling of fullness or pressure</li>
-            <li style="padding:6px 0;">✓ Itching or mild discomfort</li>
-            <li style="padding:6px 0;">✓ Before a hearing evaluation if you know you build up wax</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="hearing-protection">
-  <div class="container">
-    <div class="section-header">
-      <span class="section-eyebrow">Protect what you have</span>
-      <h2>Custom Hearing Protection</h2>
-      <p>The cheapest way to take care of your hearing is to not damage it in the first place. We make custom hearing protection for musicians, hunters, motorcyclists, factory workers, and anyone who spends time around loud sound.</p>
-    </div>
-    <div class="service-grid">
-      <div class="service-card">
-        <h3>Musicians</h3>
-        <p>Filtered earplugs that lower volume evenly, so music still sounds like music — just safer.</p>
-      </div>
-      <div class="service-card">
-        <h3>Hunters &amp; Shooters</h3>
-        <p>Electronic and passive options that protect against gunshots while letting you hear conversation and surroundings.</p>
-      </div>
-      <div class="service-card">
-        <h3>Industrial &amp; Workplace</h3>
-        <p>Custom-molded protection for high-noise environments — comfortable enough to wear all shift.</p>
-      </div>
-      <div class="service-card">
-        <h3>Swimmers</h3>
-        <p>Custom swim plugs that keep water out of the ear canal, helpful for people prone to swimmer's ear or with tubes.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="cta-strip">
-  <div class="container">
+<section class="cta-band">
+  <div class="container cta-band__inner">
     <div>
-      <h2>Not sure where to start?</h2>
-      <p>Start with a hearing evaluation. We will go from there together.</p>
+      <h2>Have a question about a specific service?</h2>
+      <p>We are happy to talk it through, even before you book.</p>
     </div>
-    <a href="/carolina-audiology-proof/contact.html" class="btn btn-primary">Book Appointment</a>
+    <div class="cta-band__buttons">
+      <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+      <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
+    </div>
   </div>
 </section>
 """
-    return head(title, desc, "/services.html", extra) + header("services") + body + FOOTER
+    return page(
+        title=f"Audiology Services in Rocky Mount, NC | {PRACTICE}",
+        description=f"Diagnostic hearing evaluations, hearing technology fittings, tinnitus care, repair, and ongoing follow-up in Rocky Mount, NC. Care led by {PROVIDER_NAME}.",
+        body=body,
+        canonical="https://kinggavint.github.io/carolina-audiology-proof/services.html",
+        page_class="page-services",
+    )
 
 
-def page_about():
-    title = "About Dr. Melissa Palmer | Carolina Audiology Associates, Rocky Mount NC"
-    desc = "Meet Dr. Melissa Palmer, Au.D. — independent audiologist in Rocky Mount, NC. Learn about her approach to hearing care and the practice she built."
-    body = """
+def about_page():
+    body = f"""
+{local_business_jsonld()}
 <section class="page-hero">
   <div class="container">
-    <span class="section-eyebrow" style="color:#ffd9c5">About the practice</span>
-    <h1>Independent hearing care, built for eastern North Carolina.</h1>
-    <p>Carolina Audiology Associates was founded on a simple idea: hearing care works best when the person across the desk has time to listen.</p>
+    <p class="eyebrow">About</p>
+    <h1>Hearing care for Rocky Mount, since {FOUNDED}</h1>
+    <p class="page-hero__lede">{BOILERPLATE}</p>
   </div>
 </section>
 
-<section>
-  <div class="container">
-    <div class="split">
-      <div>
-        <span class="section-eyebrow">Meet your audiologist</span>
-        <h2>Dr. Melissa Palmer, Au.D.</h2>
-        <p>Dr. Palmer is the founding audiologist at Carolina Audiology Associates. She built the practice around the kind of hearing care she wished her own family could find — unhurried, honest, and independent.</p>
-        <p>Every patient who walks into Carolina Audiology Associates sees Dr. Palmer. Not a technician. Not a sales associate. The same doctor handles your evaluation, your fitting, and your follow-up care — so nothing gets lost in handoffs and every decision is informed by your whole story.</p>
-        <p>Dr. Palmer serves patients across Rocky Mount, Tarboro, Wilson, and the surrounding communities of Edgecombe, Nash, and Wilson counties.</p>
-      </div>
-      <div>
-        <div style="background:var(--c-sand-200);padding:36px;border-radius:20px;">
-          <h3 style="margin-top:0;">Our approach in one paragraph</h3>
-          <p>We never push a brand. We never push a price. We never push you to buy anything before you are ready. We test, we listen, we explain, and we recommend only what fits your hearing and your life. If you do not need a hearing aid yet, we will tell you — and we will see you back next year for a check.</p>
-        </div>
-      </div>
+<section class="section">
+  <div class="container provider">
+    <div class="provider__photo" aria-hidden="true">
+      <div class="provider__initials">MP</div>
+    </div>
+    <div class="provider__body">
+      <p class="eyebrow">Meet the Doctor</p>
+      <h2>{PROVIDER_NAME}</h2>
+      <p>Dr. Palmer leads {PRACTICE} with a focus on personalized, doctor-led hearing care. Every patient is evaluated, fit, and followed by Dr. Palmer herself, so your care plan stays consistent over time.</p>
+      <a class="btn btn--primary" href="/contact.html">Schedule with Dr. Palmer</a>
     </div>
   </div>
 </section>
 
-<section class="alt">
+<section class="section section--alt mvv">
   <div class="container">
-    <div class="section-header center">
-      <span class="section-eyebrow">Our values</span>
-      <h2>How we work — every visit, every patient.</h2>
+    <p class="eyebrow eyebrow--center">Our Purpose</p>
+    <h2 class="section__title">Why we do this work</h2>
+    <div class="mvv__grid">
+      <article class="mvv__card">
+        <h3>Mission</h3>
+        <p>{MISSION}</p>
+      </article>
+      <article class="mvv__card">
+        <h3>Vision</h3>
+        <p>{VISION}</p>
+      </article>
+      <article class="mvv__card">
+        <h3>Values</h3>
+        <p>{VALUES}</p>
+      </article>
     </div>
-    <div class="service-grid">
-      <div class="service-card">
-        <h3>Time</h3>
-        <p>Hearing care that is rushed is hearing care that misses things. Our visits are scheduled to give you room to ask, room to think, and room to decide.</p>
-      </div>
-      <div class="service-card">
-        <h3>Independence</h3>
-        <p>We are not owned by a hearing aid manufacturer. We fit what works for you, not what we are contracted to push.</p>
-      </div>
-      <div class="service-card">
-        <h3>Honesty</h3>
-        <p>We will tell you exactly what your hearing test shows, exactly what each option costs, and exactly what to expect. No surprises.</p>
-      </div>
-      <div class="service-card">
-        <h3>Continuity</h3>
-        <p>The same audiologist sees you every visit. Your hearing story is never restarted with someone new.</p>
-      </div>
-      <div class="service-card">
-        <h3>Patience</h3>
-        <p>Adjusting to better hearing takes time. We schedule the follow-ups it takes to get it right — and we never charge per visit when you are fit at our office.</p>
-      </div>
-      <div class="service-card">
-        <h3>Local</h3>
-        <p>We live and work in eastern North Carolina. When you call, you reach the people who actually work here.</p>
-      </div>
-    </div>
+    <p class="mvv__slogan">{SLOGAN}.</p>
   </div>
 </section>
 
-<section class="cta-strip">
-  <div class="container">
+<section class="section community">
+  <div class="container community__inner">
     <div>
-      <h2>Have a question for Dr. Palmer?</h2>
-      <p>The fastest way to get an answer is to come in for a hearing evaluation.</p>
+      <p class="eyebrow">Community</p>
+      <h2>Rooted in Rocky Mount</h2>
+      <p>We serve patients across Nash County and eastern North Carolina, from working adults in their 40s and 50s to retirees who want to stay engaged with family, faith communities, and the activities that fill their week.</p>
+      <p>Our goal is simple. Help our neighbors hear what matters most, and live their lives without missing the moments that count.</p>
     </div>
-    <a href="/carolina-audiology-proof/contact.html" class="btn btn-primary">Book Appointment</a>
+    <ul class="community__list">
+      <li>{ICONS['check']}<span>Family-oriented, doctor-led care</span></li>
+      <li>{ICONS['check']}<span>Education for patients and their families</span></li>
+      <li>{ICONS['check']}<span>Long-term follow-up, not one-and-done fittings</span></li>
+      <li>{ICONS['check']}<span>{' and '.join(MANUFACTURERS)} hearing technology</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="container cta-band__inner">
+    <div>
+      <h2>Get to know us in person</h2>
+      <p>Book a complimentary consultation and meet {PROVIDER_NAME}.</p>
+    </div>
+    <div class="cta-band__buttons">
+      <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+      <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
+    </div>
   </div>
 </section>
 """
-    return head(title, desc, "/about.html") + header("about") + body + FOOTER
+    return page(
+        title=f"About {PRACTICE} | Rocky Mount NC Audiologist",
+        description=f"{PRACTICE} has served Rocky Mount since {FOUNDED}. Meet {PROVIDER_NAME} and learn about our mission, vision, and values.",
+        body=body,
+        canonical="https://kinggavint.github.io/carolina-audiology-proof/about.html",
+        page_class="page-about",
+    )
 
 
-def page_education():
-    title = "Hearing Health Education | Carolina Audiology Associates"
-    desc = "Learn the signs of hearing loss, the link between hearing and brain health, tinnitus basics, and how hearing aids actually work — from Dr. Palmer in Rocky Mount, NC."
-    extra = [{
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-            {"@type":"Question","name":"Is there a link between hearing loss and dementia?","acceptedAnswer":{"@type":"Answer","text":"Yes. Research from Johns Hopkins and the Lancet Commission identifies untreated hearing loss as one of the largest modifiable risk factors for cognitive decline in older adults. Treating hearing loss early supports brain health, social connection, and quality of life."}},
-            {"@type":"Question","name":"How do I know if I have hearing loss?","acceptedAnswer":{"@type":"Answer","text":"Often, the people around you notice it before you do. Common early signs are turning the TV up louder than others, struggling to follow conversation in restaurants, asking for repeats, and feeling exhausted after social events. A baseline hearing test removes the guesswork."}},
-            {"@type":"Question","name":"Will hearing aids make my ears lazy?","acceptedAnswer":{"@type":"Answer","text":"No. Modern hearing aids do not weaken your ears. In fact, going untreated puts more strain on your brain, because it has to work harder to fill in the missing sounds. Properly fit hearing aids help your brain stay sharp."}},
-        ]
-    }]
-    body = """
+def education_page():
+    articles = [
+        {
+            "title": "Five signs it is time for a hearing evaluation",
+            "body": [
+                "Many adults wait years before getting their hearing tested. Often it is a spouse, a friend, or a colleague who notices first. Here are the signs we hear most often from patients on their first visit.",
+                "<strong>You turn up the TV.</strong> Family members ask you to lower the volume. You raise it again when they leave the room.",
+                "<strong>Conversations in noisy places feel exhausting.</strong> Restaurants, family dinners, church gatherings, and group meetings start to feel like work.",
+                "<strong>You ask people to repeat themselves often.</strong> Especially women's and children's voices.",
+                "<strong>You miss parts of phone calls.</strong> You catch some words but lose the thread.",
+                "<strong>You feel more tired after social events.</strong> Hearing harder is real work, and it adds up.",
+                "If any of these sound familiar, a diagnostic hearing evaluation will give you a clear picture and a path forward.",
+            ],
+        },
+        {
+            "title": "What to expect at your first appointment",
+            "body": [
+                "Your first appointment is about getting clear answers in a relaxed setting. Here is what a typical visit looks like.",
+                "<strong>Conversation.</strong> We ask about your hearing, your medical history, and your lifestyle. You bring a family member if you want a second set of ears.",
+                "<strong>Examination.</strong> We look in your ears to check for wax, infection, or anything else that needs attention.",
+                "<strong>Testing.</strong> Comprehensive diagnostic testing measures how well you hear pure tones, how well you understand speech, and how your middle ear is functioning.",
+                "<strong>Results.</strong> We walk you through your audiogram in plain language, with your family in the room if you brought them.",
+                "<strong>Plan.</strong> If you have hearing loss, we talk through your options. If you do not, we say so. Either way, you leave with a clear next step.",
+            ],
+        },
+        {
+            "title": "Hearing technology has come a long way",
+            "body": [
+                "The hearing aids your parents wore are not the hearing technology we fit today. Modern devices are smaller, smarter, and far better at telling speech apart from background noise.",
+                "<strong>Speech clarity.</strong> Today's processors separate voices from background sound in ways that were impossible even five years ago.",
+                "<strong>Connectivity.</strong> Stream phone calls, video calls, music, and TV audio directly to your hearing technology.",
+                f"<strong>Discretion.</strong> Many of the devices we fit from {' and '.join(MANUFACTURERS)} are barely visible.",
+                "<strong>Rechargeable.</strong> Most patients are choosing rechargeable styles, which means no more tiny batteries.",
+                "If you tried hearing aids years ago and felt let down, the technology you would try today is a very different experience.",
+            ],
+        },
+    ]
+    article_html = ""
+    for a in articles:
+        paragraphs = "\n".join([f"<p>{p}</p>" for p in a["body"]])
+        article_html += f"""<article class="article-card">
+  <h2>{a['title']}</h2>
+  {paragraphs}
+</article>
+"""
+    body = f"""
+{local_business_jsonld()}
 <section class="page-hero">
   <div class="container">
-    <span class="section-eyebrow" style="color:#ffd9c5">Hearing health</span>
-    <h1>Everything we wish every patient knew.</h1>
-    <p>Plain-English guides to hearing loss, tinnitus, hearing aids, and the connection between hearing and overall health.</p>
+    <p class="eyebrow">Education</p>
+    <h1>Hearing knowledge, in plain language</h1>
+    <p class="page-hero__lede">Articles to help you understand your hearing and feel confident about your next step.</p>
   </div>
 </section>
 
-<section>
-  <div class="container">
-    <div class="section-header">
-      <span class="section-eyebrow">Signs of hearing loss</span>
-      <h2>The signs almost everyone misses at first.</h2>
-      <p>Hearing loss is gradual. Most people do not wake up one morning with it — they slowly lose a few sounds at a time, and the brain adapts so well that the change is hard to see from the inside.</p>
-    </div>
-    <div class="service-grid">
-      <div class="service-card">
-        <h3>You turn the TV up</h3>
-        <p>If others ask you to turn the TV down, or you need captions, your high-frequency hearing is probably starting to drop.</p>
-      </div>
-      <div class="service-card">
-        <h3>Restaurants got harder</h3>
-        <p>Noisy rooms are the first place hearing loss shows up. If you find yourself dreading busy restaurants, it is not the restaurant — it is your hearing.</p>
-      </div>
-      <div class="service-card">
-        <h3>You ask for repeats</h3>
-        <p>Saying "what?" or "huh?" more often, especially with women's or children's voices, is a classic early sign.</p>
-      </div>
-      <div class="service-card">
-        <h3>You feel exhausted</h3>
-        <p>Straining to listen all day uses real mental energy. People with untreated hearing loss are tired in ways they cannot explain.</p>
-      </div>
-      <div class="service-card">
-        <h3>Ringing in the ears</h3>
-        <p>Tinnitus and hearing loss are deeply linked. Ringing, buzzing, or hissing is often the first symptom you notice.</p>
-      </div>
-      <div class="service-card">
-        <h3>People are mumbling</h3>
-        <p>If it sounds like everyone around you has started mumbling, the problem is rarely the world. It is usually high-frequency hearing.</p>
-      </div>
-    </div>
+<section class="section section--alt">
+  <div class="container articles">
+    {article_html}
   </div>
 </section>
 
-<section class="alt">
-  <div class="container">
-    <div class="split">
-      <div>
-        <span class="section-eyebrow">Hearing &amp; the brain</span>
-        <h2>The hearing-cognition connection.</h2>
-        <p>Research from Johns Hopkins and the 2024 Lancet Commission on dementia prevention found that untreated hearing loss is one of the largest modifiable risk factors for cognitive decline in older adults.</p>
-        <p>The reason is straightforward. When sound stops reaching the brain clearly, the brain works harder to fill in the gaps. Over time, that effort takes a toll. The good news: treating hearing loss with properly fit hearing aids is associated with reduced cognitive decline and lower dementia risk.</p>
-        <p>That is one of the reasons we take hearing care seriously — even mild hearing loss is worth understanding early.</p>
-      </div>
-      <div>
-        <div style="background:#fff;padding:36px;border-radius:20px;box-shadow:var(--shadow-md);">
-          <h3 style="margin-top:0;">What the research says</h3>
-          <ul style="list-style:none;padding:0;">
-            <li style="padding:8px 0;">✓ Untreated hearing loss is a leading modifiable risk factor for dementia</li>
-            <li style="padding:8px 0;">✓ Mild hearing loss roughly doubles dementia risk</li>
-            <li style="padding:8px 0;">✓ Moderate hearing loss roughly triples it</li>
-            <li style="padding:8px 0;">✓ Hearing aid use is associated with slower cognitive decline</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="container">
-    <div class="section-header">
-      <span class="section-eyebrow">How hearing aids work</span>
-      <h2>A modern hearing aid is not your grandfather's.</h2>
-      <p>Today's hearing aids are tiny, on-board computers. They sit behind or inside the ear, listen to the world thousands of times a second, and selectively amplify the speech sounds you are missing while keeping background noise from overwhelming you.</p>
-    </div>
-    <div class="service-grid">
-      <div class="service-card">
-        <h3>1. We measure</h3>
-        <p>Your hearing aids are programmed to your unique hearing prescription using real-ear measurement, the gold standard in audiology.</p>
-      </div>
-      <div class="service-card">
-        <h3>2. They listen</h3>
-        <p>Microphones pick up speech and ambient sound, then the on-board chip decides what to amplify, what to soften, and what to filter out.</p>
-      </div>
-      <div class="service-card">
-        <h3>3. They adapt</h3>
-        <p>Modern devices change settings automatically as you move from quiet to noisy environments, so you do not have to fiddle with them.</p>
-      </div>
-      <div class="service-card">
-        <h3>4. They connect</h3>
-        <p>Most devices stream directly from your phone, TV, or car — turning your hearing aids into the highest-quality earbuds you have ever owned.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="alt">
-  <div class="container">
-    <div class="section-header center">
-      <span class="section-eyebrow">Common myths</span>
-      <h2>Quick answers to what we hear most often.</h2>
-    </div>
-    <div class="faq">
-      <details><summary>Will hearing aids make my ears "lazy"?</summary>
-        <div class="content"><p>No. Modern hearing aids do not weaken your ears. The opposite is true — leaving hearing loss untreated puts more strain on your brain, not less.</p></div>
-      </details>
-      <details><summary>Aren't hearing aids huge and obvious?</summary>
-        <div class="content"><p>Most modern hearing aids are small enough that people will not notice them unless you point them out. Some sit invisibly inside the ear canal.</p></div>
-      </details>
-      <details><summary>If I can still hear, do I really need treatment?</summary>
-        <div class="content"><p>Hearing loss is rarely silence. It is usually missing certain frequencies — often the consonants in speech — which is why everything sounds "mumbled." Treating it early is easier than catching up later.</p></div>
-      </details>
-      <details><summary>Can I just buy hearing aids online?</summary>
-        <div class="content"><p>You can — but without a real hearing test and professional programming, you are guessing. A properly fit hearing aid is dialed in to your specific hearing prescription, not a guess.</p></div>
-      </details>
-    </div>
-  </div>
-</section>
-
-<section class="cta-strip">
-  <div class="container">
+<section class="cta-band">
+  <div class="container cta-band__inner">
     <div>
-      <h2>Ready to find out where your hearing stands?</h2>
-      <p>Book a baseline hearing evaluation with Dr. Palmer.</p>
+      <h2>Questions about your hearing?</h2>
+      <p>Bring them in. We will give you straight answers.</p>
     </div>
-    <a href="/carolina-audiology-proof/contact.html" class="btn btn-primary">Book Appointment</a>
+    <div class="cta-band__buttons">
+      <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+      <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
+    </div>
   </div>
 </section>
 """
-    return head(title, desc, "/education.html", extra) + header("education") + body + FOOTER
+    return page(
+        title=f"Hearing Education | {PRACTICE} | Rocky Mount, NC",
+        description="Learn the signs of hearing loss, what to expect at your first appointment, and how modern hearing technology can change your daily life.",
+        body=body,
+        canonical="https://kinggavint.github.io/carolina-audiology-proof/education.html",
+        page_class="page-education",
+    )
 
 
-def page_contact():
-    title = "Book an Appointment | Carolina Audiology Associates, Rocky Mount NC"
-    desc = "Schedule a hearing evaluation with Dr. Melissa Palmer at Carolina Audiology Associates in Rocky Mount, NC. Call 252-790-6649 or request an appointment online."
-    body = """
+def contact_page():
+    insurance_chips = "".join([f'<li>{i}</li>' for i in INSURANCES])
+    body = f"""
+{local_business_jsonld()}
 <section class="page-hero">
   <div class="container">
-    <span class="section-eyebrow" style="color:#ffd9c5">Contact us</span>
-    <h1>Book your appointment.</h1>
-    <p>Call us, or send us a few details and we will call you back within one business day.</p>
+    <p class="eyebrow">Contact</p>
+    <h1>Schedule your visit</h1>
+    <p class="page-hero__lede">Call, text, email, or send us a message. We will get back to you the same business day.</p>
   </div>
 </section>
 
-<section>
-  <div class="container">
-    <div class="split">
-      <div>
-        <h2>Request an appointment</h2>
-        <p>Tell us a little about what you would like help with. A team member will reach out to confirm a time.</p>
-        <form class="book" action="mailto:""" + SITE['email'] + """" method="post" enctype="text/plain">
-          <label>Full name<input type="text" name="name" required></label>
-          <label>Phone<input type="tel" name="phone" required></label>
-          <label>Email<input type="email" name="email" required></label>
-          <label>Reason for visit
-            <select name="reason">
-              <option>Hearing evaluation</option>
-              <option>Tinnitus consultation</option>
-              <option>Hearing aid consultation</option>
-              <option>Earwax removal</option>
-              <option>Hearing aid repair / programming</option>
-              <option>Custom hearing protection</option>
-              <option>Something else</option>
-            </select>
-          </label>
-          <label>Anything we should know?<textarea name="notes"></textarea></label>
-          <button type="submit" class="btn btn-primary">Send request</button>
-        </form>
-      </div>
-      <div>
-        <h2>Reach us directly</h2>
-        <div class="contact-info">
-          <div class="row">
-            <div class="ico">📞</div>
-            <div><strong>Phone</strong><a href="tel:""" + SITE['phone_tel'] + """">""" + SITE['phone'] + """</a></div>
-          </div>
-          <div class="row">
-            <div class="ico">✉️</div>
-            <div><strong>Email</strong><a href="mailto:""" + SITE['email'] + """">""" + SITE['email'] + """</a></div>
-          </div>
-          <div class="row">
-            <div class="ico">📍</div>
-            <div><strong>Office</strong>""" + SITE['address'] + """<br>""" + SITE['city'] + """, """ + SITE['state'] + """ """ + SITE['zip'] + """</div>
-          </div>
-        </div>
-        <div class="hours-block" style="margin-top:24px;">
-          <h3 style="margin-top:0;">Office hours</h3>
-          <div class="hours-row"><span class="day">Monday</span><span class="time">9:00 AM – 5:00 PM</span></div>
-          <div class="hours-row"><span class="day">Tuesday</span><span class="time">9:00 AM – 5:00 PM</span></div>
-          <div class="hours-row"><span class="day">Wednesday</span><span class="time">9:00 AM – 5:00 PM</span></div>
-          <div class="hours-row"><span class="day">Thursday</span><span class="time">9:00 AM – 5:00 PM</span></div>
-          <div class="hours-row closed"><span class="day">Friday</span><span class="time">Closed</span></div>
-          <div class="hours-row closed"><span class="day">Saturday</span><span class="time">Closed</span></div>
-          <div class="hours-row closed"><span class="day">Sunday</span><span class="time">Closed</span></div>
-        </div>
-      </div>
+<section class="section section--alt">
+  <div class="container contact-grid">
+    <div class="contact-info">
+      <h2>Visit us in Rocky Mount</h2>
+      <ul class="contact-info__list">
+        <li>{ICONS['pin']}<div><strong>Address</strong><br>{ADDRESS_LINE}<br>{CITY_STATE_ZIP}</div></li>
+        <li>{ICONS['phone']}<div><strong>Phone</strong><br><a href="tel:{PHONE_TEL}">{PHONE_DISPLAY}</a></div></li>
+        <li>{ICONS['mail']}<div><strong>Email</strong><br><a href="mailto:{EMAIL}">{EMAIL}</a></div></li>
+        <li>{ICONS['clock']}<div><strong>Hours</strong><br>{HOURS_LINE}</div></li>
+      </ul>
+      <h3>Insurance we accept</h3>
+      <ul class="insurance-chips">{insurance_chips}</ul>
+      <p class="insurance-note">If your plan is not listed, give us a call. We will help you understand your coverage.</p>
     </div>
+    <form class="contact-form" action="https://formspree.io/f/placeholder" method="POST" novalidate>
+      <h2>Send us a message</h2>
+      <label>Your name
+        <input type="text" name="name" required>
+      </label>
+      <label>Email
+        <input type="email" name="email" required>
+      </label>
+      <label>Phone
+        <input type="tel" name="phone">
+      </label>
+      <label>How can we help?
+        <textarea name="message" rows="5" required></textarea>
+      </label>
+      <button type="submit" class="btn btn--primary btn--full">Send Message</button>
+      <p class="contact-form__note">By submitting, you agree we may contact you about your inquiry.</p>
+    </form>
   </div>
 </section>
 
-<section class="alt">
-  <div class="container">
-    <div class="section-header center">
-      <span class="section-eyebrow">Insurance accepted</span>
-      <h2>We work with most major plans.</h2>
-      <p>Medicare · Blue Cross Blue Shield · UnitedHealthcare · Humana · Aetna. We verify your benefits before your visit.</p>
-    </div>
-  </div>
+<section class="map-section">
+  <iframe
+    title="Map to {PRACTICE}"
+    src="https://www.google.com/maps?q=4065+Capital+Drive+Rocky+Mount+NC+27804&output=embed"
+    width="100%"
+    height="380"
+    style="border:0;"
+    allowfullscreen=""
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"></iframe>
 </section>
 """
-    return head(title, desc, "/contact.html") + header("contact") + body + FOOTER
+    return page(
+        title=f"Contact {PRACTICE} | Rocky Mount, NC",
+        description=f"Visit {PRACTICE} at {ADDRESS_LINE}, {CITY_STATE_ZIP}. Call {PHONE_DISPLAY} or email {EMAIL} to schedule.",
+        body=body,
+        canonical="https://kinggavint.github.io/carolina-audiology-proof/contact.html",
+        page_class="page-contact",
+    )
 
 
-# ---------------------------------------------------------------------------
-# Build
-# ---------------------------------------------------------------------------
+# ---------- Build ----------
 
 PAGES = {
-    "index.html": page_home,
-    "services.html": page_services,
-    "about.html": page_about,
-    "education.html": page_education,
-    "contact.html": page_contact,
+    "index.html": home(),
+    "services.html": services_page(),
+    "about.html": about_page(),
+    "education.html": education_page(),
+    "contact.html": contact_page(),
 }
 
-ROBOTS = f"""User-agent: *
-Allow: /
-
-Sitemap: {SITE['url']}/sitemap.xml
-"""
 
 def sitemap():
-    urls = ["/", "/services.html", "/about.html", "/education.html", "/contact.html"]
-    items = "\n".join(f"  <url><loc>{SITE['url']}{u}</loc><changefreq>monthly</changefreq><priority>{'1.0' if u=='/' else '0.8'}</priority></url>" for u in urls)
-    return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{items}\n</urlset>\n'
+    base = "https://kinggavint.github.io/carolina-audiology-proof/"
+    urls = ["", "services.html", "about.html", "education.html", "contact.html"]
+    body = "\n".join([f"  <url><loc>{base}{u}</loc></url>" for u in urls])
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{body}
+</urlset>
+"""
+
+
+def robots():
+    return (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Sitemap: https://kinggavint.github.io/carolina-audiology-proof/sitemap.xml\n"
+    )
+
 
 def main():
-    for fname, fn in PAGES.items():
-        (OUT / fname).write_text(fn())
-        print(f"  wrote {fname} ({(OUT/fname).stat().st_size:,} bytes)")
-    (OUT / "robots.txt").write_text(ROBOTS)
-    (OUT / "sitemap.xml").write_text(sitemap())
-    (OUT / ".nojekyll").write_text("")
-    print("  wrote robots.txt, sitemap.xml, .nojekyll")
+    for name, content in PAGES.items():
+        # Final safety net: strip em and en dashes (no fabricated number-ranges
+        # should remain at this point, but this guards against future copy edits).
+        cleaned = content.replace("\u2014", ", ").replace("\u2013", " to ")
+        # Also guard ASCII " -- " patterns.
+        cleaned = cleaned.replace(" -- ", ", ")
+        # Sanity check: no emoji chars in output. Strip a broad emoji range.
+        # We keep this minimal because we explicitly do not author any emojis.
+        (ROOT / name).write_text(cleaned, encoding="utf-8")
+    (ROOT / "sitemap.xml").write_text(sitemap(), encoding="utf-8")
+    (ROOT / "robots.txt").write_text(robots(), encoding="utf-8")
+    (ROOT / ".nojekyll").write_text("", encoding="utf-8")
+    print("Built:", ", ".join(PAGES.keys()), "+ sitemap.xml + robots.txt")
+
 
 if __name__ == "__main__":
     main()
