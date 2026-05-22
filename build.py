@@ -135,14 +135,14 @@ SERVICES = [
 # ---------- Inline SVG icons (single-stroke, navy) ----------
 ICONS = {
     # Stylized ear
-    "ear": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+    "ear": ('<svg viewBox="0 0 48 48" width="24" height="24" fill="none" stroke="currentColor" '
             'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
             'aria-hidden="true">'
             '<path d="M16 18a8 8 0 0 1 16 0c0 6-5 7-5 12a4 4 0 0 1-8 0"/>'
             '<path d="M22 22a3 3 0 0 1 6 0c0 3-3 3-3 6"/>'
             '</svg>'),
     # Hearing device
-    "device": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+    "device": ('<svg viewBox="0 0 48 48" width="24" height="24" fill="none" stroke="currentColor" '
                'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
                'aria-hidden="true">'
                '<path d="M18 14c-4 2-6 6-6 12s2 10 6 12"/>'
@@ -150,7 +150,7 @@ ICONS = {
                '<circle cx="24" cy="24" r="2"/>'
                '</svg>'),
     # Sound waves
-    "wave": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+    "wave": ('<svg viewBox="0 0 48 48" width="24" height="24" fill="none" stroke="currentColor" '
              'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
              'aria-hidden="true">'
              '<path d="M10 24h4"/>'
@@ -160,13 +160,13 @@ ICONS = {
              '<path d="M36 22v4"/>'
              '</svg>'),
     # Tools / wrench
-    "tools": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+    "tools": ('<svg viewBox="0 0 48 48" width="24" height="24" fill="none" stroke="currentColor" '
               'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
               'aria-hidden="true">'
               '<path d="M30 12a6 6 0 0 0-6 6c0 1 0 2 .5 3L12 33.5a3 3 0 0 0 4 4L28.5 25c1 .5 2 .5 3 .5a6 6 0 0 0 6-6c0-1 0-2-.5-3L33 21l-4-4 3.5-3.5c-.5-.5-1.5-1-2.5-1.5z"/>'
               '</svg>'),
     # Calendar
-    "calendar": ('<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" '
+    "calendar": ('<svg viewBox="0 0 48 48" width="24" height="24" fill="none" stroke="currentColor" '
                  'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
                  'aria-hidden="true">'
                  '<rect x="10" y="12" width="28" height="26" rx="2"/>'
@@ -177,30 +177,30 @@ ICONS = {
                  '<path d="M26 28h4"/>'
                  '</svg>'),
     # Phone
-    "phone": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+    "phone": ('<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" '
               'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
               'aria-hidden="true">'
               '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>'
               '</svg>'),
-    "pin": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+    "pin": ('<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" '
             'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
             'aria-hidden="true">'
             '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>'
             '<circle cx="12" cy="10" r="3"/>'
             '</svg>'),
-    "clock": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+    "clock": ('<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" '
               'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
               'aria-hidden="true">'
               '<circle cx="12" cy="12" r="10"/>'
               '<path d="M12 6v6l4 2"/>'
               '</svg>'),
-    "mail": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+    "mail": ('<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" '
              'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
              'aria-hidden="true">'
              '<rect x="2" y="4" width="20" height="16" rx="2"/>'
              '<path d="M22 6l-10 7L2 6"/>'
              '</svg>'),
-    "check": ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+    "check": ('<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" '
               'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" '
               'aria-hidden="true">'
               '<polyline points="20 6 9 17 4 12"/>'
@@ -219,11 +219,11 @@ def page(title, description, body, canonical, page_class="", extra_head=""):
 <title>{title}</title>
 <meta name="description" content="{description}">
 <link rel="canonical" href="{canonical}">
-<link rel="icon" type="image/png" href="/assets/logo.png">
+<link rel="icon" type="image/png" href="assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="css/base.css">
 {extra_head}
 </head>
 <body class="{page_class}">
@@ -248,22 +248,22 @@ def header_html():
 </div>
 <header class="site-header">
   <div class="container site-header__inner">
-    <a class="brand" href="/" aria-label="{PRACTICE} home">
-      <img src="/assets/logo.png" alt="{PRACTICE}" class="brand__logo">
+    <a class="brand" href="index.html" aria-label="{PRACTICE} home">
+      <img src="assets/logo.png" alt="{PRACTICE}" class="brand__logo">
     </a>
     <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <nav class="primary-nav" aria-label="Primary">
       <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/services.html">Services</a></li>
-        <li><a href="/about.html">About</a></li>
-        <li><a href="/education.html">Education</a></li>
-        <li><a href="/contact.html">Contact</a></li>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="education.html">Education</a></li>
+        <li><a href="contact.html">Contact</a></li>
       </ul>
     </nav>
-    <a class="btn btn--primary header-cta" href="/contact.html">Book Appointment</a>
+    <a class="btn btn--primary header-cta" href="contact.html">Book Appointment</a>
   </div>
 </header>
 """
@@ -275,7 +275,7 @@ def footer_html():
     return f"""<footer class="site-footer">
   <div class="container site-footer__grid">
     <div class="site-footer__col">
-      <img src="/assets/logo.png" alt="{PRACTICE}" class="footer__logo">
+      <img src="assets/logo.png" alt="{PRACTICE}" class="footer__logo">
       <p class="footer__slogan">{SLOGAN}</p>
     </div>
     <div class="site-footer__col">
@@ -287,7 +287,7 @@ def footer_html():
       <h3>Contact</h3>
       <p><a href="tel:{PHONE_TEL}">{PHONE_DISPLAY}</a></p>
       <p><a href="mailto:{EMAIL}">{EMAIL}</a></p>
-      <a class="btn btn--secondary" href="/contact.html">Book Appointment</a>
+      <a class="btn btn--secondary" href="contact.html">Book Appointment</a>
     </div>
     <div class="site-footer__col">
       <h3>Care You Can Trust</h3>
@@ -298,7 +298,7 @@ def footer_html():
   <div class="site-footer__legal">
     <div class="container">
       <p>&copy; {2026} {PRACTICE}. All rights reserved.</p>
-      <p><a href="/sitemap.xml">Sitemap</a></p>
+      <p><a href="sitemap.xml">Sitemap</a></p>
     </div>
   </div>
 </footer>
@@ -352,7 +352,7 @@ def faq_jsonld(faqs):
 
 def home():
     services_cards = "\n".join([
-        f"""<a class="service-card" href="/services.html#{s['slug']}">
+        f"""<a class="service-card" href="services.html#{s['slug']}">
           <span class="service-card__icon">{ICONS[s['icon']]}</span>
           <h3>{s['title']}</h3>
           <p>{s['summary']}</p>
@@ -378,7 +378,7 @@ def home():
       <h1>Hear what matters most. Clearly.</h1>
       <p class="hero__lede">{PROVIDER_NAME} and our team provide personalized hearing care for adults and families in Rocky Mount and across eastern North Carolina.</p>
       <div class="hero__ctas">
-        <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+        <a class="btn btn--primary btn--lg" href="contact.html">Book Appointment</a>
         <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
       </div>
       <ul class="hero__trust">
@@ -392,7 +392,7 @@ def home():
       <p><strong>{ADDRESS_LINE}</strong><br>{CITY_STATE_ZIP}</p>
       <p><strong>Hours</strong><br>{HOURS_LINE}</p>
       <p><strong>Phone</strong><br><a href="tel:{PHONE_TEL}">{PHONE_DISPLAY}</a></p>
-      <a class="btn btn--primary btn--full" href="/contact.html">Schedule a Visit</a>
+      <a class="btn btn--primary btn--full" href="contact.html">Schedule a Visit</a>
     </aside>
   </div>
 </section>
@@ -413,7 +413,7 @@ def home():
       <p class="eyebrow">Our Promise</p>
       <h2>Care that starts with listening</h2>
       <p>Hearing care works best when it is built around you. We take time to understand your hearing, your goals, and your daily life. From the first evaluation through every follow-up, your care plan is yours.</p>
-      <a class="btn btn--primary" href="/about.html">About Our Practice</a>
+      <a class="btn btn--primary" href="about.html">About Our Practice</a>
     </div>
     <ul class="pledge__list">
       <li>{ICONS['check']}<span><strong>Doctor-led care.</strong> Every patient is seen by {PROVIDER_NAME}.</span></li>
@@ -441,7 +441,7 @@ def home():
       <p>Schedule a complimentary consultation with {PROVIDER_NAME}.</p>
     </div>
     <div class="cta-band__buttons">
-      <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+      <a class="btn btn--primary btn--lg" href="contact.html">Book Appointment</a>
       <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
     </div>
   </div>
@@ -466,7 +466,7 @@ def services_page():
     <div class="service-detail__body">
       <h2>{s['title']}</h2>
       <p>{s['long']}</p>
-      <a class="btn btn--ghost" href="/contact.html">Ask about {s['title'].lower()}</a>
+      <a class="btn btn--ghost" href="contact.html">Ask about {s['title'].lower()}</a>
     </div>
   </div>
 </section>
@@ -498,7 +498,7 @@ def services_page():
       <p>We are happy to talk it through, even before you book.</p>
     </div>
     <div class="cta-band__buttons">
-      <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+      <a class="btn btn--primary btn--lg" href="contact.html">Book Appointment</a>
       <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
     </div>
   </div>
@@ -533,7 +533,7 @@ def about_page():
       <p class="eyebrow">Meet the Doctor</p>
       <h2>{PROVIDER_NAME}</h2>
       <p>Dr. Palmer leads {PRACTICE} with a focus on personalized, doctor-led hearing care. Every patient is evaluated, fit, and followed by Dr. Palmer herself, so your care plan stays consistent over time.</p>
-      <a class="btn btn--primary" href="/contact.html">Schedule with Dr. Palmer</a>
+      <a class="btn btn--primary" href="contact.html">Schedule with Dr. Palmer</a>
     </div>
   </div>
 </section>
@@ -584,7 +584,7 @@ def about_page():
       <p>Book a complimentary consultation and meet {PROVIDER_NAME}.</p>
     </div>
     <div class="cta-band__buttons">
-      <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+      <a class="btn btn--primary btn--lg" href="contact.html">Book Appointment</a>
       <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
     </div>
   </div>
@@ -667,7 +667,7 @@ def education_page():
       <p>Bring them in. We will give you straight answers.</p>
     </div>
     <div class="cta-band__buttons">
-      <a class="btn btn--primary btn--lg" href="/contact.html">Book Appointment</a>
+      <a class="btn btn--primary btn--lg" href="contact.html">Book Appointment</a>
       <a class="btn btn--ghost btn--lg" href="tel:{PHONE_TEL}">Call {PHONE_DISPLAY}</a>
     </div>
   </div>
