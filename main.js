@@ -1,6 +1,6 @@
 /* Carolina Audiology Associates Main JS */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', => {
 
  /* === Scroll Animations (Intersection Observer) === */
  const fadeEls = document.querySelectorAll('.fade-up');
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
  const mobileOverlay = document.querySelector('.mobile-overlay');
 
  if (mobileToggle && mobileNav) {
- mobileToggle.addEventListener('click', () => {
+ mobileToggle.addEventListener('click', => {
  const isOpen = mobileNav.classList.toggle('open');
  mobileToggle.classList.toggle('open');
  if (mobileOverlay) mobileOverlay.classList.toggle('open');
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
  });
 
  if (mobileOverlay) {
- mobileOverlay.addEventListener('click', () => {
+ mobileOverlay.addEventListener('click', => {
  mobileNav.classList.remove('open');
  mobileToggle.classList.remove('open');
  mobileOverlay.classList.remove('open');
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
  // Close mobile nav when a non-trigger link is clicked
  mobileNav.querySelectorAll('a:not(.nav-dropdown__trigger)').forEach(link => {
- link.addEventListener('click', () => {
+ link.addEventListener('click', => {
  mobileNav.classList.remove('open');
  mobileToggle.classList.remove('open');
  if (mobileOverlay) mobileOverlay.classList.remove('open');
@@ -65,16 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
  let closeTimeout;
 
  // Desktop: show on hover
- dropdown.addEventListener('mouseenter', () => {
+ dropdown.addEventListener('mouseenter', => {
  if (window.innerWidth > 900) {
  clearTimeout(closeTimeout);
  dropdown.classList.add('is-open');
  }
  });
 
- dropdown.addEventListener('mouseleave', () => {
+ dropdown.addEventListener('mouseleave', => {
  if (window.innerWidth > 900) {
- closeTimeout = setTimeout(() => {
+ closeTimeout = setTimeout( => {
  dropdown.classList.remove('is-open');
  }, 150);
  }
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
  return;
  }
  // Mobile: toggle dropdown submenu
- e.preventDefault();
+ e.preventDefault;
  const wasOpen = dropdown.classList.contains('open');
  // Close all other dropdowns first
  document.querySelectorAll('.nav-dropdown.open').forEach(d => {
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
  });
 
  /* === Active Nav Link === */
- const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+ const currentPage = window.location.pathname.split('/').pop || 'index.html';
  document.querySelectorAll('.header__nav a').forEach(link => {
  const href = link.getAttribute('href');
  if (href === currentPage || (currentPage === '' && href === 'index.html')) {
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
  const header = document.querySelector('.header');
  if (header) {
  let lastScroll = 0;
- window.addEventListener('scroll', () => {
+ window.addEventListener('scroll', => {
  const scrollY = window.scrollY;
  if (scrollY > 10) {
  header.style.boxShadow = '0 2px 16px rgba(0,0,0,0.08)';
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
  }
 
  /* === Force all fade-ups visible after timeout (safety net) === */
- setTimeout(() => {
+ setTimeout( => {
  fadeEls.forEach(el => el.classList.add('visible'));
  }, 2500);
 
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
  anchor.addEventListener('click', function (e) {
  const target = document.querySelector(this.getAttribute('href'));
  if (target) {
- e.preventDefault();
+ e.preventDefault;
  target.scrollIntoView({ behavior: 'smooth' });
  }
  });

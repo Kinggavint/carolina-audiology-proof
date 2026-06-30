@@ -194,18 +194,18 @@
  },
  "alumniOf": {
  "@type": "CollegeOrUniversity",
- "name": "Salus University"
+ "name": "Audiology graduate program"
  },
  "hasCredential": [
  {
  "@type": "EducationalOccupationalCredential",
  "credentialCategory": "degree",
- "name": "Doctor of Audiology ()"
+ "name": "Doctor of Audiology"
  },
  {
  "@type": "EducationalOccupationalCredential",
  "credentialCategory": "certification",
- "name": "Fellow, American Academy of Audiology ()"
+ "name": "Fellow, American Academy of Audiology"
  }
  ],
  "memberOf": [
@@ -264,7 +264,7 @@
  "name": "What makes an audiologist a best-practices provider?",
  "acceptedAnswer": {
  "@type": "Answer",
- "text": "A best-practices audiologist holds a Doctor of Audiology degree (), uses real-ear measurement to verify every hearing aid fitting, performs full diagnostic testing rather than only screenings, and is independent of any single hearing aid manufacturer so the patient gets unbiased recommendations. Dr. Melissa Palmer at Carolina Audiology Associates in Rocky Mount, NC meets each of these standards and fits all major hearing aid brands."
+ "text": "A best-practices audiologist holds a Doctor of Audiology degree , uses real-ear measurement to verify every hearing aid fitting, performs full diagnostic testing rather than only screenings, and is independent of any single hearing aid manufacturer so the patient gets unbiased recommendations. Dr. Melissa Palmer at Carolina Audiology Associates in Rocky Mount, NC meets each of these standards and fits all major hearing aid brands."
  }
  },
  {
@@ -288,7 +288,7 @@
  "name": "Who is Dr. Melissa Palmer?",
  "acceptedAnswer": {
  "@type": "Answer",
- "text": "Dr. Melissa Palmer is a Doctor of Audiology () and Fellow of the American Academy of Audiology () who founded Carolina Audiology Associates in Rocky Mount, North Carolina in 2003. She earned her from Salus University and has more than 18 years of clinical experience. Dr. Carolina Audiology Associates was born with hearing loss herself, which gives her a direct understanding of what her patients are going through."
+ "text": "Dr. Melissa Palmer is a Doctor of Audiology and Fellow of the American Academy of Audiology who founded Carolina Audiology Associates. Dr. Palmer was born with hearing loss herself, which gives her a direct understanding of what her patients are going through."
  }
  },
  {
@@ -296,7 +296,7 @@
  "name": "What is the difference between an audiologist and a hearing aid specialist?",
  "acceptedAnswer": {
  "@type": "Answer",
- "text": "An audiologist holds a Doctor of Audiology degree () and is licensed to diagnose hearing loss, evaluate balance and tinnitus disorders, and fit hearing aids using full diagnostic testing. A hearing aid specialist is licensed to test for the purpose of fitting hearing aids only and does not diagnose medical conditions. Carolina Audiology Associates is led by Dr. Melissa Palmer, a board-certified audiologist."
+ "text": "An audiologist holds a Doctor of Audiology degree and is licensed to diagnose hearing loss, evaluate balance and tinnitus disorders, and fit hearing aids using full diagnostic testing. A hearing aid specialist is licensed to test for the purpose of fitting hearing aids only and does not diagnose medical conditions. Carolina Audiology Associates is led by Dr. Melissa Palmer, a board-certified audiologist."
  }
  }
  ]

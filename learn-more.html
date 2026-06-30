@@ -2025,7 +2025,7 @@
  <script src="./main.js"></script>
 
  <script>
- (function() {
+ (function {
  var searchEl = document.getElementById('hhs-search');
  var pills = document.querySelectorAll('.hhs-lm-pill');
  var cards = document.querySelectorAll('#hhs-grid .hhs-lm-card');
@@ -2035,13 +2035,13 @@
  var activeFilter = 'all';
  var searchQuery = '';
 
- function update() {
- var q = searchQuery.toLowerCase().trim();
+ function update {
+ var q = searchQuery.toLowerCase.trim;
  var visible = 0;
  cards.forEach(function(card) {
  var cat = card.getAttribute('data-category');
- var title = card.getAttribute('data-title').toLowerCase();
- var excerpt = card.getAttribute('data-excerpt').toLowerCase();
+ var title = card.getAttribute('data-title').toLowerCase;
+ var excerpt = card.getAttribute('data-excerpt').toLowerCase;
  var matchCat = (activeFilter === 'all') || (cat === activeFilter);
  var matchText = .q || title.includes(q) || excerpt.includes(q);
  if (matchCat && matchText) {
@@ -2061,20 +2061,20 @@
  }
  }
 
- searchEl.addEventListener('input', function() {
+ searchEl.addEventListener('input', function {
  searchQuery = this.value;
- update();
+ update;
  });
 
  pills.forEach(function(pill) {
- pill.addEventListener('click', function() {
+ pill.addEventListener('click', function {
  pills.forEach(function(p) { p.classList.remove('active'); });
  this.classList.add('active');
  activeFilter = this.getAttribute('data-filter');
- update();
+ update;
  });
  });
- })();
+ });
  </script>
 
 </body>
