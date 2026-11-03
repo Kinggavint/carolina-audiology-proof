@@ -1,0 +1,8 @@
+/* Preview-only overflow fixes (no layout changes) */
+img, iframe, video, embed, object, table { max-width: 100%; }
+:where(img) { height: auto; }
+body { overflow-wrap: break-word; }
+.pagination { flex-wrap: wrap; }
+@media (max-width: 767px) { .entry-content table { display: block; overflow-x: auto; } }
+html, body { overflow-x: clip; }
+@media (min-width: 992px) { #menu-item-38 > .dropdown-menu { left: auto; right: 0; } }
