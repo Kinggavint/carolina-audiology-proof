@@ -1,0 +1,89 @@
+/* Accessibility */
+p.herotext {font-weight: 900; letter-spacing: 0.05em; line-height: 1.25; margin-bottom: 0; margin-left: auto !important; margin-right: auto !important; margin-top: 0; max-width: 800px; color:#fff !important; font-size:6rem !important;}
+.wp-block-cover  {background:#264469 !important; }
+.wp-block-cover h1 {color:#fff !important;}
+div.border-card h3.card-header a, .primary-dark {background: #264469 !important;}
+h3.widget-title.card-header span {background: #264469;}
+h1, h2 {color:#005461;}
+
+
+
+/*logo */
+a.navbar-brand.custom-logo-link img {max-width:180px;}.bg-primary-gradient h1, .bg-primary-gradient h2, .bg-primary-gradient h3, .bg-primary-gradient h4, .bg-primary-gradient h5 {
+    color: #fff !important;
+}
+
+.bg-primary-gradient {
+    color: #264469 !important;
+}
+
+.btn-link, .btn-link .wp-block-button__link {
+    color: #2D687B !important;
+}
+.btn-accent:focus, .btn-accent.focus, .btn:focus, .wp-block-button__link:focus, .wp-block-search button:focus, .wpcf7 input[type=submit]:focus, .btn.focus, .focus.wp-block-button__link, .wp-block-search button.focus, .wpcf7 input.focus[type=submit] {border:1px solid #4D90FE;
+     -webkit-box-shadow: 0px 0px 5px  #4D90FE;
+     box-shadow: 0px 0px 5px  #4D90FE;}
+.border-card h4.card-header a, .border-card h3.card-header a, a.moretag.btn.btn-primary.understrap-read-more-link {
+    color: #fff;
+    text-decoration: none;
+}
+a.navbar-brand, #main-menu a {text-decoration: none;}
+/* Hide built in button for accessibility replace with button that include screen reader text */
+.excerptwrap .btn:nth-child(1) {
+    display: none;
+}
+
+
+.covidbanner {background-color: #fff6c1;  }
+.wp-block-group.covidbanner {padding: 10px;}
+
+/* fixed logo on small devices */
+#header-fixed img.img-fluid.lazy.loaded {width: 200px;}
+
+/* Mobile button for hero */
+.mobileonly {display:none; }
+@media (max-width: 400px){
+ .desktoponly {display:none; }
+.mobileonly {display:block; }}
+
+
+/* Fix for mobile drop down menu */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.homeownerimage {
+	margin-left:0;
+}
+.sticky-bottom {
+	display: none;
+}
+.hero-cta {
+	z-index: 1000;
+}
+@media (max-width: 1445px) {
+	#header-fixed .navbar-nav > .menu-item:last-child > .dropdown-menu {
+		margin-left: -70px;
+	}
+}
+
+/*PPC Pages */
+.ppcheader p {font-size:2rem;}
+p.pccpractice {text-align:left;}
+p.ppcphone {text-align:right;}
+
+@media (max-width: 991px) {
+	p.pccpractice, p.ppcphone {text-align:center;}
+	
+.ppcheader	.wp-block-column:not(:last-child) {
+    margin-bottom: 02px;
+}
+}
+p.has-text-align-center.ppchero {font-size:3rem !important;}
+
+/* reduce font weight on buttons */
+.btn, .wp-block-button__link, .wp-block-search button, .wpcf7 input[type=submit] {
+    font-weight: 600 ;
+}
