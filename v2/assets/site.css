@@ -383,3 +383,5 @@ ol.steps b{display:block}
 .coupon .reach h3{font-family:var(--text);font-size:1.1rem;font-weight:600;letter-spacing:0;margin-bottom:10px;color:#fff}
 .coupon .reach a{color:#fff}
 @media (max-width:760px){.hero-motif .illus{left:12%;bottom:30%}}
+/* QA round 2: tile caption keeps the light label style (.tile span would grey it out) */
+.tile .art .illus{color:#fff;display:inline-block;max-width:none;font-size:.8125rem;margin:0}
